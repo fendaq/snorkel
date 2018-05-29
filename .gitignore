@@ -19,6 +19,12 @@ docs/_build
 # PyCharm
 .idea
 
+# VS Code
+.vscode
+
+# mypy
+.mypy*
+
 # TF models
 *.info
 *.meta
@@ -38,3 +44,9 @@ tutorials/intro/data/articles-train.tsv
 tutorials/intro/data/gold_labels.tsv
 
 tutorials/tables/data/hardware/
+
+# TEMP
+logs/
+reports/
+tutorials/babble
+tika.log

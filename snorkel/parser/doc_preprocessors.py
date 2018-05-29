@@ -43,7 +43,7 @@ class DocPreprocessor(object):
                 for doc, text in self.parse_file(fp, file_name):
                     yield doc, text
                     doc_count += 1
-                    if doc_count >= self.max_docs:
+                    if self.max_docs and doc_count >= self.max_docs:
                         return
 
     def __iter__(self):
@@ -77,7 +77,12 @@ class TSVDocPreprocessor(DocPreprocessor):
     def parse_file(self, fp, file_name):
         with codecs.open(fp, encoding=self.encoding) as tsv:
             for line in tsv:
-                (doc_name, doc_text) = line.split('\t')
+                try:
+                    (doc_name, doc_text) = line.split('\t', 1)
+                    int(doc_name) # Confirm doc_name is numeric only
+                except ValueError:
+                    print("Malformed line. Skipping...")
+                    continue
                 stable_id = self.get_stable_id(doc_name)
                 doc = Document(
                     name=doc_name, stable_id=stable_id,
@@ -166,6 +171,8 @@ class TikaPreprocessor(DocPreprocessor):
     import tika
     # automatically downloads tika jar and starts a JVM processif no REST API
     # is configured in ENV
+    import os
+    os.environ["TIKA_LOG_PATH"] = "./"
     tika.initVM()  
     from tika import parser as tk_parser
     parser = tk_parser

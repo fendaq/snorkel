@@ -9,6 +9,7 @@ import numpy as np
 from time import time
 import os
 from six.moves.cPickle import dump, load
+import scipy.sparse as sparse
 
 from .classifier import Classifier
 from .utils import reshape_marginals, LabelBalancer
@@ -176,11 +177,19 @@ class TFNoiseAwareModel(Classifier):
         # Check that the cardinality of the training marginals and model agree
         cardinality = Y_train.shape[1] if len(Y_train.shape) > 1 else 2
         if cardinality != self.cardinality:
-            raise ValueError("Training marginals cardinality ({0}) does not"
+            raise ValueError("Training marginals cardinality ({0}) does not "
                 "match model cardinality ({1}).".format(Y_train.shape[1], 
                     self.cardinality))
         # Make sure marginals are in correct default format
         Y_train = reshape_marginals(Y_train)
+        if Y_dev is not None:
+            if isinstance(Y_dev, np.ndarray):
+                Y_dev_array = Y_dev.copy()
+            else: 
+                Y_dev_array = Y_dev.toarray().flatten()
+            if not np.all(Y_dev_array >= 0):
+                Y_dev_array = (Y_dev_array + 1) / 2.0
+
         # Make sure marginals are in [0,1] (v.s e.g. [-1, 1])
         if self.cardinality > 2 and not np.all(Y_train.sum(axis=1) - 1 < 1e-10):
             raise ValueError("Y_train must be row-stochastic (rows sum to 1).")
@@ -225,8 +234,10 @@ class TFNoiseAwareModel(Classifier):
                 self.name, n, n_epochs, batch_size
             ))
         dev_score_opt = 0.0
+
         for t in range(n_epochs):
-            epoch_losses = []
+            
+            batch_losses = []
             for i in range(0, n, batch_size):
                 feed_dict = self._construct_feed_dict(
                     X_train[i:min(n, i+batch_size)],
@@ -235,9 +246,10 @@ class TFNoiseAwareModel(Classifier):
                     **kwargs
                 )
                 # Run training step and evaluate loss function    
-                epoch_loss, _ = self.session.run(
+                batch_loss, _ = self.session.run(
                     [self.loss, self.optimizer], feed_dict=feed_dict)
-                epoch_losses.append(epoch_loss)
+                batch_losses.append(batch_loss)
+            epoch_loss = np.mean(batch_losses)
 
             # Reshuffle training data
             train_idxs = self.rand_state.permutation(list(range(n)))
@@ -247,8 +259,10 @@ class TFNoiseAwareModel(Classifier):
             
             # Print training stats and optionally checkpoint model
             if verbose and (t % print_freq == 0 or t in [0, (n_epochs-1)]):
-                msg = "[{0}] Epoch {1} ({2:.2f}s)\tAverage loss={3:.6f}".format(
-                    self.name, t, time() - st, np.mean(epoch_losses))
+                msg = ("[{0}...] Epoch {1} ({2:.2f}s) "
+                       "\tTrain Loss={3:.3f}").format(
+                        self.name[:10], t, time() - st, epoch_loss)
+
                 if X_dev is not None:
                     scores = self.score(X_dev, Y_dev, batch_size=batch_size)
                     score = scores if self.cardinality > 2 else scores[-1]

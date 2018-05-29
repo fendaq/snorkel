@@ -355,14 +355,24 @@ class GridSearch(object):
             opt_model, run_stats = self._fit_st(X_valid, Y_valid, b=b, 
                 beta=beta, set_unlabeled_as_neg=set_unlabeled_as_neg,
                 eval_batch_size=eval_batch_size)
-        return opt_model, run_stats
+        opt_b = b
+        best_score = -1
+        for b in [0.1, 0.15, 0.25, 0.5, 0.75, 0.85, 0.9]:
+            run_scores = opt_model.score(X_valid, Y_valid, b=b, beta=beta,
+                set_unlabeled_as_neg=set_unlabeled_as_neg,
+                batch_size=eval_batch_size)
+            if run_scores[-1] > best_score:
+                best_score = run_scores[-1]
+                opt_b = b
+        return opt_model, run_stats, opt_b
 
     def _fit_st(self, X_valid, Y_valid, b=0.5, beta=1,
         set_unlabeled_as_neg=True, eval_batch_size=None):
         """Single-threaded implementation of `GridSearch.fit`."""
         # Iterate over the param values
         run_stats = []
-        run_score_opt = -1.0
+        run_score_opt = -1
+        opt_model_name = None
         for k, param_vals in enumerate(self.search_space()):
             hps = self.model_hyperparams.copy()
 
@@ -396,30 +406,39 @@ class GridSearch(object):
             try:
                 model.train(*train_args, X_dev=X_valid, Y_dev=Y_valid, 
                     save_dir=self.save_dir, **hps)
+                run_scores = model.score(X_valid, Y_valid, b=b, beta=beta,
+                    set_unlabeled_as_neg=set_unlabeled_as_neg,
+                    batch_size=eval_batch_size)                    
             except:
-                model.train(*train_args, **hps)
+                try:
+                    model.train(*train_args, **hps)
+                    run_scores = model.score(X_valid, Y_valid, b=b, beta=beta,
+                        set_unlabeled_as_neg=set_unlabeled_as_neg,
+                        batch_size=eval_batch_size)
+                except ValueError: # Typically caused by having no positive labels
+                    print("ValueError: Likely no positive labels were found.")
+                    run_scores = [-1]
 
-            # Test the model
-            run_scores = model.score(X_valid, Y_valid, b=b, beta=beta,
-                set_unlabeled_as_neg=set_unlabeled_as_neg,
-                batch_size=eval_batch_size)
             if model.cardinality > 2:
                 run_score, run_score_label = run_scores, "Accuracy"
                 run_scores = [run_score]
             else:
-                run_score  = run_scores[-1]
+                run_score = run_scores[-1]
                 run_score_label = "F-{0} Score".format(beta)
 
             # Add scores to running stats, print, and set as optimal if best
             print("[{0}] {1}: {2}".format(model.name,run_score_label,run_score))
             run_stats.append(list(param_vals) + list(run_scores))
-            if run_score > run_score_opt or k == 0:
+            if run_score > run_score_opt:
                 model.save(model_name=model_name, save_dir=self.save_dir)
                 # Also save a separate file for easier access
                 model.save(model_name="{0}_best".format(model.name), 
                     save_dir=self.save_dir)
                 opt_model_name = model_name
                 run_score_opt = run_score
+
+        if opt_model_name is None:
+            raise Exception("No models successfully completed.")
 
         # Set optimal parameter in the learner model
         opt_model = self.model_class(**self.model_class_params)
