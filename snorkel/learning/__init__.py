@@ -10,5 +10,6 @@ from .disc_models.logistic_regression import (
 )
 from .gen_learning import (
     GenerativeModel,
-    GenerativeModelWeights
+    GenerativeModelWeights,
 )
+from .majority_vote import MajorityVoter, SoftMajorityVoter
