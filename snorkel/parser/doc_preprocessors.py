@@ -76,12 +76,11 @@ class TSVDocPreprocessor(DocPreprocessor):
 
     def parse_file(self, fp, file_name):
         with codecs.open(fp, encoding=self.encoding) as tsv:
-            for line in tsv:
+            for i, line in enumerate(tsv):
                 try:
                     (doc_name, doc_text) = line.split('\t', 1)
-                    int(doc_name) # Confirm doc_name is numeric only
-                except ValueError:
-                    print("Malformed line. Skipping...")
+                except:
+                    print("Line {} is malformed. Skipping...".format(i))
                     continue
                 stable_id = self.get_stable_id(doc_name)
                 doc = Document(
