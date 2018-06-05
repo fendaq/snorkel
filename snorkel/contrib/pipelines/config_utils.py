@@ -17,7 +17,7 @@ def get_local_config(domain, project='babble'):
         raise ValueError
 
     local_config_path = os.path.join(os.environ['SNORKELHOME'], 
-        'tutorials', project, domain, 'config.py')
+        'experiments', project, domain, 'config.py')
     if not os.path.exists(local_config_path):
         raise Exception("The config.py for the {} domain was not found at {}.".format(
             domain, local_config_path))
@@ -28,11 +28,11 @@ def get_local_config(domain, project='babble'):
 def get_local_pipeline(domain, project='babble'):
     if project == 'babble':
         pipeline_path = os.path.join(os.environ['SNORKELHOME'],
-            'tutorials', project, domain, '{}_pipeline.py'.format(domain))
+            'experiments', project, domain, '{}_pipeline.py'.format(domain))
         pipeline_name = '{}Pipeline'.format(domain.capitalize())
     elif project == 'qalf':
         pipeline_path = os.path.join(os.environ['SNORKELHOME'],
-            'tutorials', project, domain, '{}_qalf_pipeline.py'.format(domain))
+            'experiments', project, domain, '{}_qalf_pipeline.py'.format(domain))
         pipeline_name = '{}QalfPipeline'.format(domain.capitalize())
     else:
         raise ValueError

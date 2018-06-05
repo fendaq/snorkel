@@ -1,6 +1,6 @@
 import os
 
-from tutorials.babble.spouse import SpousePipeline
+from experiments.babble.spouse import SpousePipeline
 from tutorials.qalf import QalfPipeline
 from tutorials.qalf.qalf_converter_legacy import LegacyQalfConverter
 

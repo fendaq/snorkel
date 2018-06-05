@@ -1,0 +1,147 @@
+import csv
+import os
+
+import numpy as np
+import random
+from six.moves.cPickle import load
+
+from snorkel.annotations import load_gold_labels
+from snorkel.candidates import Ngrams, PretaggedCandidateExtractor
+from snorkel.matchers import PersonMatcher
+from snorkel.models import Document, Sentence, StableLabel
+from snorkel.parser import CorpusParser, XMLMultiDocPreprocessor, TSVDocPreprocessor
+from snorkel.parser.spacy_parser import Spacy
+
+from snorkel.contrib.pipelines.snorkel_pipeline import TRAIN, DEV, TEST
+
+from snorkel.contrib.babble import Babbler
+from snorkel.contrib.babble import BabblePipeline
+
+from experiments.babble.cdr.utils import TaggerOneTagger
+from experiments.babble.cdr.load_external_annotations import load_external_labels
+from experiments.babble.cdr.cdr_examples import get_explanations, get_user_lists
+
+DATA_ROOT = os.environ['SNORKELHOME'] + '/experiments/babble/cdr/data/'
+
+class CdrPipeline(BabblePipeline):
+    def parse(self, 
+              file_path=(DATA_ROOT + 'CDR.BioC.xml'),
+                                    # CDR.BioC.small.xml 
+              clear=True,
+              config=None):
+        doc_preprocessor = XMLMultiDocPreprocessor(
+            path=file_path,
+            doc='.//document',
+            text='.//passage/text/text()',
+            id='.//id/text()',
+            max_docs=self.config['max_docs']
+        )
+        tagger_one = TaggerOneTagger()
+        corpus_parser = CorpusParser(parser=Spacy(), fn=tagger_one.tag)
+        corpus_parser.apply(list(doc_preprocessor), 
+                    count=doc_preprocessor.max_docs, 
+                    parallelism=self.config['parallelism'], 
+                    clear=clear)
+
+        # TEMP: This section is for adding extra pubmed abstracts
+        if self.config['verbose']:
+            print("Documents: {}".format(self.session.query(Document).count()))
+            print("Sentences: {}".format(self.session.query(Sentence).count()))
+
+        if self.config['max_extra_docs']:
+            print("Beginning to parse {} extra documents.".format(self.config['max_extra_docs']))
+            pubmed_path = DATA_ROOT + 'query_pubmed.10k.txt'
+            doc_preprocessor2 = TSVDocPreprocessor(pubmed_path, max_docs=None)
+
+            corpus_parser = CorpusParser(parser=Spacy(), fn=tagger_one.tag)
+            corpus_parser.apply(list(doc_preprocessor2), 
+                        count=doc_preprocessor2.max_docs, 
+                        parallelism=self.config['parallelism'], 
+                        clear=False)
+        # TEMP
+
+        if self.config['verbose']:
+            print("Documents: {}".format(self.session.query(Document).count()))
+            print("Sentences: {}".format(self.session.query(Sentence).count()))
+        
+    def extract(self, clear=True, config=None):
+        with open(DATA_ROOT + 'doc_ids.pkl', 'rb') as f:
+            train_ids, dev_ids, test_ids = load(f)
+            train_ids, dev_ids, test_ids = set(train_ids), set(dev_ids), set(test_ids)
+
+        train_sents, dev_sents, test_sents = set(), set(), set()
+        docs = self.session.query(Document).order_by(Document.name).all()
+
+        num_extra_docs = 0
+        for i, doc in enumerate(docs):
+            if doc.name not in train_ids:
+                num_extra_docs += 1
+                
+            for s in doc.sentences:
+                if doc.name in dev_ids:
+                    dev_sents.add(s)
+                elif doc.name in test_ids:
+                    test_sents.add(s)
+                else:
+                    if (self.config['train_fraction'] != 1
+                        and random.random() > self.config['train_fraction']):
+                        continue
+                    train_sents.add(s)
+                # else:
+                #     raise Exception('ID <{0}> not found in any id set'.format(doc.name))
+        print("Extracted candidates from {} 'extra' documents".format(num_extra_docs))
+
+        candidate_extractor = PretaggedCandidateExtractor(self.candidate_class,
+                                                          ['Chemical', 'Disease'])
+        
+        for split, sents in enumerate([train_sents, dev_sents, test_sents]):
+            if len(sents) > 0 and split in self.config['splits']:
+                super(CdrPipeline, self).extract(
+                    candidate_extractor, sents, split=split, clear=clear)
+
+    def load_gold(self, config=None):
+        for split in self.config['splits']:
+            load_external_labels(self.session, self.candidate_class, 
+                                 split=split, annotator='gold')
+        
+            L_gold = load_gold_labels(self.session, annotator_name='gold', split=split)
+            candidates = self.session.query(self.candidate_class).filter(
+                self.candidate_class.split == split).all()
+            total = len(candidates)
+            positive = float(sum(L_gold.todense() == 1))
+            # print("Positive % (no pruning): {:.1f}%\n".format(positive/total * 100))
+
+            ### SPECIAL: Trim candidate set to meet desired positive pct
+            # Process is deterministic to ensure repeatable results
+            SEED = 123
+            TARGET_PCT = 0.20
+            positives = []
+    
+            print("Positive % before pruning: {:.1f}%\n".format(positive/total * 100))
+            
+            for c in candidates:
+                label = L_gold[L_gold.get_row_index(c), 0]
+                if label > 0:
+                    positives.append(c)
+            
+            target = int(TARGET_PCT * total)
+            random.seed(SEED)
+            to_delete = random.sample(positives, len(positives) - target)
+
+            for c in to_delete:
+                self.session.delete(c)
+
+            L_gold = load_gold_labels(self.session, annotator_name='gold', split=split)
+            positive = float(sum(L_gold.todense() == 1))
+            print("Positive % after pruning: {:.1f}%\n".format(positive/total * 100))
+            ### END SPECIAL
+
+            self.session.commit()
+
+    def collect(self):
+        if self.config['supervision'] == 'traditional':
+            print("In 'traditional' supervision mode...skipping 'collect' stage.")
+            return
+        explanations = get_explanations()
+        user_lists = get_user_lists()
+        super(CdrPipeline, self).babble('text', explanations, user_lists, self.config)

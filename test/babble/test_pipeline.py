@@ -4,7 +4,7 @@ from snorkel import SnorkelSession
 from snorkel.models import candidate_subclass
 from snorkel.contrib.pipelines import global_config, STAGES
 
-from tutorials.babble.stub.stub_pipeline import StubPipeline
+from experiments.babble.stub.stub_pipeline import StubPipeline
 
 class TestPipeline(unittest.TestCase):
 

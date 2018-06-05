@@ -18,7 +18,7 @@ from snorkel.annotations import load_marginals, load_gold_labels
 from snorkel.contrib.pipelines import final_report
 from snorkel.contrib.babble import BabblePipeline
 
-from tutorials.babble import MTurkHelper
+from experiments.babble import MTurkHelper
 
 TRAIN = 0
 DEV = 1
