@@ -40,7 +40,6 @@ explanations = [
         label=True,
         semantics=('.root', ('.label', ('.bool', False), ('.call', ('.eq', ('.bool', True)), ('.bool', False)))) # NOTE: this is not the actual correct parse, but the specified condition is unrepresentable.
         ),
-        # partial: semantics=('.root', ('.label', ('.bool', True), ('.call', ('.in', ('.extract_text', ('.left', ('.arg', ('.int', 1)), ('.string', '.eq'), ('.int', 1), ('.string', 'words')))), ('.string', u'husband'))))
 
     Explanation(
         name='LF6',

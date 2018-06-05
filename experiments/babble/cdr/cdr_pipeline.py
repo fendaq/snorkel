@@ -26,7 +26,6 @@ DATA_ROOT = os.environ['SNORKELHOME'] + '/experiments/babble/cdr/data/'
 class CdrPipeline(BabblePipeline):
     def parse(self, 
               file_path=(DATA_ROOT + 'CDR.BioC.xml'),
-                                    # CDR.BioC.small.xml 
               clear=True,
               config=None):
         doc_preprocessor = XMLMultiDocPreprocessor(
@@ -43,23 +42,6 @@ class CdrPipeline(BabblePipeline):
                     parallelism=self.config['parallelism'], 
                     clear=clear)
 
-        # TEMP: This section is for adding extra pubmed abstracts
-        if self.config['verbose']:
-            print("Documents: {}".format(self.session.query(Document).count()))
-            print("Sentences: {}".format(self.session.query(Sentence).count()))
-
-        if self.config['max_extra_docs']:
-            print("Beginning to parse {} extra documents.".format(self.config['max_extra_docs']))
-            pubmed_path = DATA_ROOT + 'query_pubmed.10k.txt'
-            doc_preprocessor2 = TSVDocPreprocessor(pubmed_path, max_docs=None)
-
-            corpus_parser = CorpusParser(parser=Spacy(), fn=tagger_one.tag)
-            corpus_parser.apply(list(doc_preprocessor2), 
-                        count=doc_preprocessor2.max_docs, 
-                        parallelism=self.config['parallelism'], 
-                        clear=False)
-        # TEMP
-
         if self.config['verbose']:
             print("Documents: {}".format(self.session.query(Document).count()))
             print("Sentences: {}".format(self.session.query(Sentence).count()))
@@ -72,25 +54,19 @@ class CdrPipeline(BabblePipeline):
         train_sents, dev_sents, test_sents = set(), set(), set()
         docs = self.session.query(Document).order_by(Document.name).all()
 
-        num_extra_docs = 0
         for i, doc in enumerate(docs):
-            if doc.name not in train_ids:
-                num_extra_docs += 1
-                
             for s in doc.sentences:
-                if doc.name in dev_ids:
-                    dev_sents.add(s)
-                elif doc.name in test_ids:
-                    test_sents.add(s)
-                else:
+                if doc.name in train_ids:
                     if (self.config['train_fraction'] != 1
                         and random.random() > self.config['train_fraction']):
                         continue
                     train_sents.add(s)
-                # else:
-                #     raise Exception('ID <{0}> not found in any id set'.format(doc.name))
-        print("Extracted candidates from {} 'extra' documents".format(num_extra_docs))
-
+                elif doc.name in dev_ids:
+                    dev_sents.add(s)
+                elif doc.name in test_ids:
+                    test_sents.add(s)
+                else:
+                    raise Exception('ID <{0}> not found in any id set'.format(doc.name))
         candidate_extractor = PretaggedCandidateExtractor(self.candidate_class,
                                                           ['Chemical', 'Disease'])
         
@@ -109,15 +85,11 @@ class CdrPipeline(BabblePipeline):
                 self.candidate_class.split == split).all()
             total = len(candidates)
             positive = float(sum(L_gold.todense() == 1))
-            # print("Positive % (no pruning): {:.1f}%\n".format(positive/total * 100))
 
-            ### SPECIAL: Trim candidate set to meet desired positive pct
-            # Process is deterministic to ensure repeatable results
+            # Trim candidate set to meet desired positive pct
             SEED = 123
             TARGET_PCT = 0.20
             positives = []
-    
-            print("Positive % before pruning: {:.1f}%\n".format(positive/total * 100))
             
             for c in candidates:
                 label = L_gold[L_gold.get_row_index(c), 0]
@@ -133,8 +105,7 @@ class CdrPipeline(BabblePipeline):
 
             L_gold = load_gold_labels(self.session, annotator_name='gold', split=split)
             positive = float(sum(L_gold.todense() == 1))
-            print("Positive % after pruning: {:.1f}%\n".format(positive/total * 100))
-            ### END SPECIAL
+            print("Positive %: {:.1f}%\n".format(positive/total * 100))
 
             self.session.commit()
 

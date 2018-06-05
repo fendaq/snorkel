@@ -41,7 +41,7 @@ if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description="Run SnorkelPipeline object.")
     
     PROJECTS = ['babble', 'qalf']
-    DOMAINS = ['spouse', 'cdr', 'protein', 'bike', 'drink', 'stub', 'tacred']
+    DOMAINS = ['spouse', 'cdr', 'stub']
     RELATIONS = ['per_title', 'org_top_members_employees', 'org_alternate_names']
 
     argparser.add_argument('--project', type=str, default='babble', choices=PROJECTS)

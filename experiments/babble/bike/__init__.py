@@ -1,2 +1,0 @@
-from bike_pipeline import BikePipeline
-from image_objects import BBox
