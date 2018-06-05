@@ -233,7 +233,7 @@ class SnorkelPipeline(object):
                 # tp, fp, tn, fn = gen_model.error_analysis(
                 #     self.session, L_dev, L_gold_dev, display=True)
 
-        elif self.config['supervision'] == 'metal':
+        elif self.config['supervision'] == 'dp':
             from snorkel.contrib.pipelines.metal import ClassHierarchy
 
             L_train = convert_to_categorical(L_train)
@@ -354,7 +354,7 @@ class SnorkelPipeline(object):
                 plt.hist(train_marginals)
                 plt.show()
 
-        if (self.config['supervision'] in ['generative', 'metal'] and 
+        if (self.config['supervision'] in ['generative', 'dp'] and 
             self.config['end_at'] == STAGES.CLASSIFY):
             final_report(self.config, self.scores)
 

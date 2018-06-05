@@ -48,7 +48,7 @@ config = {
         'l2_penalty': 10,
         'dropout':    0.5,
         'dim':        50,
-        'n_epochs':   20,
+        'n_epochs':   0,
         'print_freq': 5,
     },    
     'disc_params_range': {

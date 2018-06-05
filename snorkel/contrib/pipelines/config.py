@@ -12,7 +12,7 @@ global_config = {
     'splits': [0, 1, 2],
     'verbose': True,
     'debug': False,
-    'no_plots': False,
+    'no_plots': True,
     'seed': 0,
     'start_at': STAGES.SETUP, # Stage of pipeline to start at
     'end_at': STAGES.ALL, # Stage of pipeline to end at (inclusive)
@@ -43,7 +43,7 @@ global_config = {
     'max_lfs': None,
 
     ### SUPERVISE ###
-    'supervision': 'generative', # ['traditional', 'majority', 'generative'],
+    'supervision': 'dp', # ['traditional', 'majority', 'generative', 'dp'],
 
     ## traditional
     'max_train': None,  # Number of ground truthed training candidates
