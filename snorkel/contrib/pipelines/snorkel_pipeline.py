@@ -90,15 +90,26 @@ class SnorkelPipeline(object):
 
     def parse(self, doc_preprocessor, parser=Spacy(), fn=None, clear=True):
         corpus_parser = CorpusParser(parser=parser, fn=fn)
-        corpus_parser.apply(doc_preprocessor, count=doc_preprocessor.max_docs, 
-                            parallelism=self.config['parallelism'], clear=clear)
+        corpus_parser.apply(
+            doc_preprocessor, 
+            count=doc_preprocessor.max_docs, 
+            parallelism=self.config['parallelism'], 
+            clear=clear,
+            progress_bar=self.config['codalab']
+        )
         if self.config['verbose']:
             print("Documents: {}".format(self.session.query(Document).count()))
             print("Sentences: {}".format(self.session.query(Sentence).count()))        
 
 
     def extract(self, cand_extractor, sents, split, clear=True):
-        cand_extractor.apply(sents, split=split, parallelism=self.config['parallelism'], clear=clear)
+        cand_extractor.apply(
+            sents, 
+            split=split, 
+            parallelism=self.config['parallelism'], 
+            clear=clear,
+            progress_bar=self.config['codalab'],
+        )
         if self.config['verbose']:
             num_candidates = self.session.query(self.candidate_class).filter(self.candidate_class.split == split).count()
             print("Candidates [Split {}]: {}".format(split, num_candidates))
@@ -119,9 +130,17 @@ class SnorkelPipeline(object):
         featurizer = FeatureAnnotator()
         for split in self.config['splits']:
             if split == TRAIN:
-                F = featurizer.apply(split=split, parallelism=self.config['parallelism'])
+                F = featurizer.apply(
+                    split=split, 
+                    parallelism=self.config['parallelism'],
+                    progress_bar=self.config['codalab'],
+                )
             else:
-                F = featurizer.apply_existing(split=split, parallelism=self.config['parallelism'])
+                F = featurizer.apply_existing(
+                    split=split, 
+                    parallelism=self.config['parallelism'],
+                    progress_bar=self.config['codalab'],
+                )
             num_candidates, num_features = F.shape
             if self.config['verbose']:
                 print("Featurized split {}: ({},{}) sparse (nnz = {})".format(split, num_candidates, num_features, F.nnz))
@@ -133,9 +152,17 @@ class SnorkelPipeline(object):
 
     def label(self, labeler, split, clear=False):
         if split == TRAIN or clear:
-            L = labeler.apply(split=split, parallelism=self.config['parallelism'])
+            L = labeler.apply(
+                split=split, 
+                parallelism=self.config['parallelism'],
+                progress_bar=self.config['codalab'],
+            )
         else:
-            L = labeler.apply_existing(split=split, parallelism=self.config['parallelism'])
+            L = labeler.apply_existing(
+                split=split, 
+                parallelism=self.config['parallelism'],
+                progress_bar=self.config['codalab'],
+            )
         return L
     
 
@@ -356,7 +383,11 @@ class SnorkelPipeline(object):
 
         if (self.config['supervision'] in ['generative', 'dp'] and 
             self.config['end_at'] == STAGES.CLASSIFY):
-            final_report(self.config, self.scores)
+            final_report(
+                self.config, 
+                self.scores, 
+                print_only=self.config['codalab'],
+            )
 
 
     def classify(self, config=None):
@@ -540,7 +571,11 @@ class SnorkelPipeline(object):
         else:
             print("Final performance on DEV:")
 
-        final_report(self.config, self.scores)
+        final_report(
+            self.config, 
+            self.scores, 
+            print_only=self.config['codalab'],
+        )
 
 
     def learn_deps(self, L_train):

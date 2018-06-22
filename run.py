@@ -60,6 +60,8 @@ if __name__ == '__main__':
     argparser.add_argument('--max_extra_docs', type=int)
     argparser.add_argument('--debug', action='store_true',
         help="""Reduces max_docs, grid search sizes, and num_epochs""")        
+    argparser.add_argument('--codalab', action='store_true',
+        help="""Turns off some features incompatible with codalab""")        
 
 
     # Babble args

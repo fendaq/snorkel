@@ -38,7 +38,7 @@ def git_commit_hash(path=None):
 
 
 ### REPORTING TOOLS
-def final_report(config, scores):
+def final_report(config, scores, print_only=False):
     # Print and save final score report
     ks = list(scores.keys())
     cols = ['Precision', 'Recall', 'F1 Score']
@@ -50,21 +50,22 @@ def final_report(config, scores):
     df = DataFrame(data=d, index=ks)
     print(df)
 
-    # Assemble the report, to be saved as a json file
-    df_scores = df.to_dict()
-    report = {
-        'snorkel-commit': git_commit_hash(path=os.environ['SNORKELHOME']),
-        'scores': df_scores,
-        'config': config,
-    }
+    if not print_only:
+        # Assemble the report, to be saved as a json file
+        df_scores = df.to_dict()
+        report = {
+            'snorkel-commit': git_commit_hash(path=os.environ['SNORKELHOME']),
+            'scores': df_scores,
+            'config': config,
+        }
 
-    # Save to file
-    report_dir = os.path.join(os.environ['SNORKELHOME'], config['reports_dir'], strftime("%Y_%m_%d"))
-    report_name = '{0}_{1}.json'.format(config['domain'], strftime("%H_%M_%S"))
-    if not os.path.exists(report_dir):
-        os.makedirs(report_dir)
-    with open(os.path.join(report_dir, report_name), 'wb') as f:
-        json.dump(report, f, indent=2)
+        # Save to file
+        report_dir = os.path.join(os.environ['SNORKELHOME'], config['reports_dir'], strftime("%Y_%m_%d"))
+        report_name = '{0}_{1}.json'.format(config['domain'], strftime("%H_%M_%S"))
+        if not os.path.exists(report_dir):
+            os.makedirs(report_dir)
+        with open(os.path.join(report_dir, report_name), 'wb') as f:
+            json.dump(report, f, indent=2)
 
 
 def sparse_to_labelmatrix(sparse_matrix, candidate_map, lf_names, split, replace_key_set=False):

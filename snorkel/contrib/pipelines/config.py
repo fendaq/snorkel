@@ -12,6 +12,7 @@ global_config = {
     'splits': [0, 1, 2],
     'verbose': True,
     'debug': False,
+    'codalab': False,
     'no_plots': True,
     'seed': 0,
     'start_at': STAGES.SETUP, # Stage of pipeline to start at
