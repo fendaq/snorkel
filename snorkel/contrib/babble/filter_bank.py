@@ -66,12 +66,12 @@ class FilterBank(object):
                 self.candidate_class.split == self.split).all()
             dense_label_matrix = np.zeros((len(candidates), len(lfs)))
 
-            pb = ProgressBar(len(lfs))
+            # pb = ProgressBar(len(lfs))
             for j, lf in enumerate(lfs):
-                pb.bar(j)
+                # pb.bar(j)
                 for i, c in enumerate(candidates):
                     dense_label_matrix[i, j] = lf(c)
-            pb.close()                
+            # pb.close()                
             label_matrix = csr_matrix(dense_label_matrix)
             return label_matrix
 

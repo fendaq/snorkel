@@ -147,7 +147,11 @@ class BabblePipeline(SnorkelPipeline):
                 #     L = self.babbler.label_matrix
                 #     print("Reloaded label matrix from babbler for split {}.".format(split))
                 # else:
-                L = SnorkelPipeline.label(self, self.labeler, split, clear=clear)
+                L = SnorkelPipeline.label(
+                    self, 
+                    self.labeler, 
+                    split, 
+                    clear=clear)
                 if clear:
                     clear = False
                 num_candidates, num_labels = L.shape

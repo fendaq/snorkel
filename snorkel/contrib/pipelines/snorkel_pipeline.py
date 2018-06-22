@@ -95,7 +95,7 @@ class SnorkelPipeline(object):
             count=doc_preprocessor.max_docs, 
             parallelism=self.config['parallelism'], 
             clear=clear,
-            progress_bar=self.config['codalab']
+            progress_bar=(not self.config['codalab']),
         )
         if self.config['verbose']:
             print("Documents: {}".format(self.session.query(Document).count()))
@@ -108,7 +108,7 @@ class SnorkelPipeline(object):
             split=split, 
             parallelism=self.config['parallelism'], 
             clear=clear,
-            progress_bar=self.config['codalab'],
+            progress_bar=(not self.config['codalab']),
         )
         if self.config['verbose']:
             num_candidates = self.session.query(self.candidate_class).filter(self.candidate_class.split == split).count()
@@ -133,13 +133,13 @@ class SnorkelPipeline(object):
                 F = featurizer.apply(
                     split=split, 
                     parallelism=self.config['parallelism'],
-                    progress_bar=self.config['codalab'],
+                    progress_bar=(not self.config['codalab']),
                 )
             else:
                 F = featurizer.apply_existing(
                     split=split, 
                     parallelism=self.config['parallelism'],
-                    progress_bar=self.config['codalab'],
+                    progress_bar=(not self.config['codalab']),
                 )
             num_candidates, num_features = F.shape
             if self.config['verbose']:
@@ -155,13 +155,13 @@ class SnorkelPipeline(object):
             L = labeler.apply(
                 split=split, 
                 parallelism=self.config['parallelism'],
-                progress_bar=self.config['codalab'],
+                progress_bar=(not self.config['codalab']),
             )
         else:
             L = labeler.apply_existing(
                 split=split, 
                 parallelism=self.config['parallelism'],
-                progress_bar=self.config['codalab'],
+                progress_bar=(not self.config['codalab']),
             )
         return L
     
