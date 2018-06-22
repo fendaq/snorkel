@@ -70,38 +70,6 @@ class BabblePipeline(SnorkelPipeline):
                                user_lists=user_lists,
                                apply_filters=self.config['apply_filters'])
         
-        # TEMP
-        # This temporary block is being used to identify how often the correct
-        # parse is found by the babbler.
-        # for exp in explanations:
-        #     print("Run Babbler...")
-        #     self.babbler.parses = []
-        #     self.babbler.apply([exp], 
-        #                     split=self.config['babbler_label_split'], 
-        #                     parallelism=self.config['parallelism'])
-        #     print("-----------------------------------------------------------")
-        #     print("\nCandidate:")
-        #     print(exp.candidate[0].get_span(), exp.candidate[1].get_span())
-        #     print(exp.candidate.get_parent().text)
-        #     print("\nExplanation:")
-        #     print(exp.name)
-        #     print("")
-        #     print(exp)
-        #     print("\nParses:")
-        #     parses = self.babbler.get_parses(translate=False)
-        #     translated = self.babbler.get_parses()
-        #     print("{} TOTAL:".format(len(parses)))
-        #     for p, t in zip(parses, translated):
-        #         print("")
-        #         print(t)
-        #         print("")
-        #         print(p.semantics)
-        #     print("\nFiltered Parses:")
-        #     self.babbler.filtered_analysis()
-        #     print("\n")
-        #     import pdb; pdb.set_trace()
-        # TEMP
-
 
         if self.config['gold_explanations']:
             self.explanations = explanations
@@ -142,11 +110,6 @@ class BabblePipeline(SnorkelPipeline):
             if num_candidates > 0:
                 # NOTE: we currently relabel the babbler_split so that 
                 # apply_existing on the other splits will use the same key set.
-
-                # if split == self.config['babbler_split']:
-                #     L = self.babbler.label_matrix
-                #     print("Reloaded label matrix from babbler for split {}.".format(split))
-                # else:
                 L = SnorkelPipeline.label(
                     self, 
                     self.labeler, 

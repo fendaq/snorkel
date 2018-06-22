@@ -176,55 +176,7 @@ class BabbleStream(object):
         self.dev_candidates = session.query(self.candidate_class).filter(self.candidate_class.split == 1).all()
         self.dev_labels = np.ravel((load_gold_labels(session, annotator_name='gold', split=1)).todense())
     
-        # self.candidate_generator_kwargs = kwargs
-        ### TEMP HARDCODE ###
-        if soft_start:
-            priority_ids = [
-                # T EXAMPLE 1: 
-                    # Because "husband" is right before Y
-                    # Because 'with' and 'husband' are within 5 words to the left of Y
-                '48355563-37ab-4fb8-9525-4762d6be7fc8::span:7317:7320~~48355563-37ab-4fb8-9525-4762d6be7fc8::span:7378:7383',
-                # F EXAMPLE __3__: 
-                    # Because X and Y are the same person.
-                    # Because X starts with Y.
-                '24a08559-a824-4331-9028-fbeac1f3ca5a::span:1637:1640~~24a08559-a824-4331-9028-fbeac1f3ca5a::span:1706:1709',
-                # T EXAMPLE 6: 
-                    # Because "married to" is between X and Y and there are no people are between them
-                    # Because "got married" is between X and Y
-                'a587afeb-715c-44ee-bdef-75f61cb7c6e8::span:1108:1117~~a587afeb-715c-44ee-bdef-75f61cb7c6e8::span:1179:1193',
-                # F EXAMPLE 5: 
-                    # Because none of the words "wife", "husband", "spouse", or "married" are in the sentence.
-                    # Because the last word of X is different than the last word of Y
-                '6807fb8a-333f-41fd-bf8b-4b47681a5a08::span:711:726~~6807fb8a-333f-41fd-bf8b-4b47681a5a08::span:770:779',
-                # T EXAMPLE __2__: 
-                    # Because "husband" or "wife" is within five words of X and Y
-                    # Because "his wife" is within five words of X and Y
-                '40cb15fa-0186-4868-a5b7-eb2fc6a317cf::span:115:123~~40cb15fa-0186-4868-a5b7-eb2fc6a317cf::span:138:153',
-                # F EXAMPLE 7: 
-                    # Because either "son" or "daughter" is immediately to the left of X or Y
-                    # Because "son" is between X and Y
-                '7fc3e510-c4e6-44c2-a24b-f9a39bfcfb07::span:4942:4950~~7fc3e510-c4e6-44c2-a24b-f9a39bfcfb07::span:4973:4978',
-                # F: "X or Y is in all caps"
-                '9ee7265a-b7e3-4ebe-a60e-ef145884b80a::span:204:208~~9ee7265a-b7e3-4ebe-a60e-ef145884b80a::span:239:243',
-                # OTHERS:
-                # T: "tied the knot"
-                'e6307d27-db6b-4d6c-b67d-0bd4d9647e69::span:392:399~~e6307d27-db6b-4d6c-b67d-0bd4d9647e69::span:405:412',
-                # T: "The first word of X is different than the first word of Y and the last word of X is the same as the last word of Y"
-                '63d7922b-ba07-47d2-88c1-06431c7302a9::span:1720:1729~~63d7922b-ba07-47d2-88c1-06431c7302a9::span:1890:1898',
-                # F: Because 'rapper', 'actress', or 'author' is in the sentence
-                'c393a09d-b1a5-4161-b0e2-073fbcc57cec::span:7205:7215~~c393a09d-b1a5-4161-b0e2-073fbcc57cec::span:7253:7266'
-                # T: "and her husband"
-                '95f95f3f-8589-4eac-9682-0342b1dd1da0::span:1748:1752~~95f95f3f-8589-4eac-9682-0342b1dd1da0::span:1771:1773',
-                # T: "couple" + "living"
-                '5c4ff333-53d5-4e01-90aa-c048508a0403::span:1289:1292~~5c4ff333-53d5-4e01-90aa-c048508a0403::span:1298:1302',
-                # OTHER?
-                '55138a30-e5a7-4a3e-ad24-0a42d125d247::span:5558:5571~~55138a30-e5a7-4a3e-ad24-0a42d125d247::span:5586:5599',
-                # ? EXAMPLE __4__: [video only] ("almost appeared like an old married couple")
-                '355137fd-21b3-426e-a87e-1c81b0f5326b::span:136:145~~355137fd-21b3-426e-a87e-1c81b0f5326b::span:151:166',
-            ]
-        else:
-            priority_ids = []
-        ### TEMP HARDCODE ###
+        priority_ids = []
 
         self.candidate_generator = CandidateGenerator(self, seed=self.seed, 
             priority_candidate_ids=priority_ids, **kwargs)
@@ -235,7 +187,6 @@ class BabbleStream(object):
         
         self.parses = []
         self.label_matrix = None
-        # rows, cols, data, shape:(_, _)
         self.label_triples = [[[],[],[],0,0], None, [[],[],[],0,0]]
 
         # Temporary storage
@@ -266,7 +217,7 @@ class BabbleStream(object):
     def _build_semparser(self):
         self.semparser = SemanticParser(
             mode=self.mode, candidate_class=self.candidate_class, 
-            user_lists=self.user_lists, beam_width=10) #top_k=-4, beam_width=30)
+            user_lists=self.user_lists, beam_width=10)
 
     def add_user_lists(self, new_user_lists):
         """
@@ -289,10 +240,6 @@ class BabbleStream(object):
             parses, _, _, _ = self.apply(explanations)
             if parses:
                 self.commit()
-            # Also label train and test
-            # if label_others:
-            #     self.label_split(0)
-            #     self.label_split(2)
 
     def apply(self, explanations, split=1, parallelism=1):
         """
@@ -323,7 +270,6 @@ class BabbleStream(object):
         filtered_objects['UnparseableExplanations'] = unparseable_explanations
         
         # Hold results in temporary space until commit
-        # self.temp_explanations = explanations if isinstance(explanations, list) else [explanations]
         self.temp_parses = parses if isinstance(parses, list) else [parses]
         self.temp_label_matrix = label_matrix
         self.temp_filtered_objects = filtered_objects
@@ -335,9 +281,6 @@ class BabbleStream(object):
         :param explanations: an Explanation or list of Explanations.
         :return: a list of Parses.
         """
-        # if not self.semparser:
-        #     self._build_semparser()
-
         parses = self.semparser.parse(explanations, 
             return_parses=True, verbose=self.verbose)
         used_explanations = set([p.explanation for p in parses])
@@ -449,9 +392,6 @@ class BabbleStream(object):
                     filter_str = "Inconsistency with Example"
                     reason_str = "This parse did not agree with the candidate ({}, {})".format(
                         candidate[0].get_span(), candidate[1].get_span())
-                    # TEMP
-                    # print(filtered_parse.reason.get_parent().text.encode('utf-8'))
-                    # TEMP
                     
                 elif filter_name == 'UniformSignatureFilter':
                     filter_str = "Uniform Signature"
@@ -464,7 +404,6 @@ class BabbleStream(object):
                         self.semparser.grammar.translate(filtered_parse.reason.explanation))
 
                 print("\n[#{}]: {}".format(num_filtered, filter_str))
-                # print("\nFilter: {}".format(filter_str))
                 if filtered_parse.reason == 'Unparseable':
                     print("\nExplanation: {}".format(parse_str))
                 else:

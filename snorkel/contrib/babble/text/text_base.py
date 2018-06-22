@@ -27,15 +27,16 @@ lexical_rules = (
     [Rule('$NumberNER', w, ('ORDINAL|CARDINAL')) for w in ['number', 'numbers']] +
     [Rule('$OrganizationNER', w, ('ORG')) for w in ['organization', 'organizations', 'company', 'companies', 'agency', 'agencies', 'institution', 'institutions']] +
     [Rule('$NorpNER', w, ('NORP')) for w in ['political', 'politician', 'religious']] +
-
-    # FIXME: Temporary hardcode; replace with "domain_rules" passed to grammar
     [Rule('$X', w, ('.int', 1)) for w in ['x', 'X', '1']] +
     [Rule('$X', w, ('.int', 2)) for w in ['y', 'Y', '2']] +
     [Rule('$ArgX', '?$PersonNER $X', lambda (person_, idx_): ('.arg', idx_))] +
+
+    # FIXME: Temporary hardcode for convenience; 
+    # Instead, pass these domain-specific helpers if the user is allowed to
+    # refer to entities as something other than "arg x" or "arg y"
     [Rule('$ArgX', w, ('.arg', ('.int', 1))) for w in ['personx', 'person1', 'arg1']] +
     [Rule('$ArgX', w, ('.arg', ('.int', 2))) for w in ['persony', 'person2', 'arg2']] +
     [Rule('$ArgXListAnd', w, ('.list', ('.arg', ('.int', 1)), ('.arg', ('.int', 2)))) for w in ['people', 'persons', 'names']]
-    # FIXME
 )
 
 unary_rules = [
@@ -75,16 +76,6 @@ unary_rules = [
 
 
 compositional_rules = [
-    # Text Baseline
-    # NEW
-    # Rule('$ROOT', '$Start $Label $Bool $Because $String $Stop',
-    #     lambda (start_, lab_, bool_, _, str_, stop_):
-    #     ('.root', (lab_, bool_, ('.call', ('.in', ('.extract_text', ('.sentence',))), str_)))),
-    # Rule('$ROOT', '$Start $Label $Bool $Because $StringList $Stop',
-    #     lambda (start_, lab_, bool_, _, strlist_, stop_):
-    #     ('.root', (lab_, bool_, ('.all', ('.map', ('.in', ('.extract_text', ('.sentence',))), strlist_))))),
-    # NEW
-
     # Direction
         # "is left of Y"
     Rule('$StringToBool', '$Direction $ArgX', lambda (dir_, arg_): 

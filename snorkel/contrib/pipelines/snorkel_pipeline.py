@@ -255,11 +255,6 @@ class SnorkelPipeline(object):
                 tp, fp, tn, fn = gen_model.error_analysis(
                     self.session, L_dev, L_gold_dev, display=True)
 
-                # print("Simple QA score (1 question) on dev set:")
-                # L_dev = L_dev[:,0]
-                # tp, fp, tn, fn = gen_model.error_analysis(
-                #     self.session, L_dev, L_gold_dev, display=True)
-
         elif self.config['supervision'] == 'dp':
             from snorkel.contrib.pipelines.metal import ClassHierarchy
 
@@ -350,7 +345,7 @@ class SnorkelPipeline(object):
             )
             train_marginals = gen_model.marginals(L_train)
 
-            print("\nGen. model (DP) score on dev set (b={}):".format(opt_b))
+            print("\nGen. model (DP) score on dev set:")
             tp, fp, tn, fn = gen_model.error_analysis(self.session, L_dev, L_gold_dev, b=opt_b, display=True)
             
             # Record generative model performance
@@ -359,14 +354,6 @@ class SnorkelPipeline(object):
             f1 = float(2 * precision * recall)/(precision + recall) if (precision or recall) else 0
             self.scores['Gen'] = [precision, recall, f1]
 
-            if self.config['verbose']:
-                if (self.config['display_learned_accuracies'] and 
-                    not self.config['no_plots']):
-                    raise NotImplementedError
-                    # NOTE: Unfortunately, learned accuracies are not available after grid search
-                    # lf_stats = L_dev.lf_stats(self.session, L_gold_dev, 
-                    #     gen_model.learned_lf_stats()['Accuracy'])
-                    # print(lf_stats)
         else:
             raise Exception("Invalid value for 'supervision': {}".format(self.config['supervision']))
 
@@ -538,32 +525,17 @@ class SnorkelPipeline(object):
         prec, rec, f1, cov = score_marginals(self.disc_model.marginals(
                 X_dev, batch_size=self.config['disc_eval_batch_size']), 
                 Y_dev, b=opt_b)
-        print('Disc on dev set (opt_b={}): P={:.3f} | R={:.3f} | F1={:.3f}'.format(
-            opt_b, prec, rec, f1))
+        print('Disc on dev set: P={:.3f} | R={:.3f} | F1={:.3f}'.format(
+            prec, rec, f1))
         self.scores['Disc'] = [prec, rec, f1]
 
         if TEST in self.config['splits']:
-            # with PrintTimer("[7.2] Evaluate generative model (opt_b={})".format(opt_b)):
-            #     if self.gen_model is not None:
-            #         # Score generative model on test set
-            #         if self.L_test is None:
-            #             L_test = load_label_matrix(self.session, split=TEST)
-            #         else:
-            #             L_test = self.L_test            
-            #         assert L_test.nnz > 0         
-
-            #         np.random.seed(self.config['seed'])
-            #         self.scores['Gen'] = score_marginals(
-            #             self.gen_model.marginals(L_test), Y_test, b=opt_b)
-            #     else:
-            #         print("gen_model is undefined. Skipping.")
-
-            with PrintTimer("[7.3] Evaluate discriminative model (opt_b={})".format(opt_b)):
+            with PrintTimer("[7.3] Evaluate discriminative model"):
                 prec, rec, f1, cov = score_marginals(self.disc_model.marginals(
                         X_test, batch_size=self.config['disc_eval_batch_size']), 
                         Y_test, b=opt_b)
-                print('Disc on test set (opt_b={}): P={:.3f} | R={:.3f} | F1={:.3f}'.format(
-                    opt_b, prec, rec, f1))
+                print('Disc on test set: P={:.3f} | R={:.3f} | F1={:.3f}'.format(
+                    prec, rec, f1))
                 self.scores['Disc'] = [prec, rec, f1]
 
         if TEST in self.config['splits']:

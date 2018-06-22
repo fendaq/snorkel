@@ -262,10 +262,6 @@ class SemanticParser(object):
         If a phrase is a component span of the candidate, it is replaced with
         _arg 1_ or _arg 2_ instead (without underscores).
         """
-        # TEMP
-        # original_condition = condition
-        # TEMP
-
         # First, replace direct mentions of candidate components with _arg x_
         candidate_words = set(candidate.get_parent().words)
         candidate_text = candidate.get_parent().text
@@ -273,9 +269,6 @@ class SemanticParser(object):
             if candidate[argnum - 1].get_span() in condition:
                 # Replace name with _arg x_
                 condition = condition.replace(candidate[argnum - 1].get_span(), 'arg {}'.format(argnum))
-                # # Remove spurious quotes
-                # condition = condition.replace('"arg {}"'.format(argnum), 'arg {}'.format(argnum))
-                # condition = condition.replace('"arg {}\'s"'.format(argnum), 'arg {}'.format(argnum))
         
         # Identify potential quoted words
         condition_words = condition.split()
@@ -313,11 +306,6 @@ class SemanticParser(object):
             new_condition_words.append(condition_words[i])
             i += 1
         new_condition = ' '.join(new_condition_words)
-        # TEMP
-        # if condition != new_condition:
-        #     print("Before: {}".format(original_condition))
-        #     print("After:  {}".format(new_condition))
-        # TEMP
         return new_condition        
 
     def translate(self, sem):

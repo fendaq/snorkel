@@ -32,17 +32,6 @@ class IntegerAnnotator(Annotator):
                 return [('$Int', ('.int', value))]
         return []
 
-# Deprecated: CoreNLP implementation
-# class IntegerAnnotator(Annotator):
-#     def annotate(self, tokens):
-#         if len(tokens) == 1:
-#             if all('normalizedNER' in token for token in tokens):
-#                 ner_number = tokens[0]['normalizedNER']
-#                 number = re.sub('[^\d\.]','', ner_number)
-#                 value = int(float(number))
-#                 return [('$Int', ('.int', value))]
-#         return []
-
 annotators = [PunctuationAnnotator(), IntegerAnnotator()]
 
 
