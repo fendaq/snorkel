@@ -115,7 +115,7 @@ if __name__ == '__main__':
 
     # Display args    
     argparser.add_argument('--verbose', action='store_true')
-    argparser.add_argument('--no_plots', action='store_true')
+    # argparser.add_argument('--no_plots', action='store_true')
 
     # DB configuration args
     argparser.add_argument('--db_name', type=str, default=None,
@@ -131,7 +131,7 @@ if __name__ == '__main__':
     args = expand_dicts(args)
 
     # Get the DB connection string and add to globals
-    default_db_name = 'babble_' + args['domain'] + ('_debug' if args['debug'] else '')
+    default_db_name = args['domain'] + ('_debug' if args['debug'] else '')
     DB_NAME = args['db_name'] if args['db_name'] is not None else default_db_name
     if not args['postgres']:
         DB_NAME += ".db"
@@ -143,9 +143,8 @@ if __name__ == '__main__':
     # All Snorkel imports must happen after $SNORKELDB is set
     from snorkel import SnorkelSession
     from snorkel.models import candidate_subclass
-
-    from config import global_config
-    from config_utils import get_local_pipeline, merge_configs
+    from snorkel.contrib.pipelines.config import global_config
+    from snorkel.contrib.pipelines.config_utils import get_local_pipeline, merge_configs
 
     # Resolve config conflicts (args > local config > global config)
     config = merge_configs(args)
