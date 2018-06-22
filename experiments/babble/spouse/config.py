@@ -16,7 +16,6 @@ config = {
     },
 
     'disc_model_class': 'logreg',
-    'disc_model_search_space': 10,
     'disc_init_params': {
         'n_threads': 16,
         'seed'     : 123,
