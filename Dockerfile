@@ -9,3 +9,4 @@ RUN conda install --yes numba
 
 COPY python-package-requirement.txt .
 RUN pip install -r python-package-requirement.txt
+RUN python -m spacy download en
