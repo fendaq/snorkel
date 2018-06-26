@@ -6,7 +6,7 @@ from snorkel.contrib.babble import Explanation
 
 def get_user_lists():
     ctd_pickle_path = os.path.join(os.environ['SNORKELHOME'], 
-                                   'tutorials/cdr/data/ctd.pkl.bz2') 
+                                   'experiments/babble/cdr/data/ctd.pkl.bz2') 
     print('Loading canonical ID ontologies...')
     with bz2.BZ2File(ctd_pickle_path, 'rb') as ctd_f:
         ctd_unspecified, ctd_therapy, ctd_marker = cPickle.load(ctd_f)
