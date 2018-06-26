@@ -1,1 +1,0 @@
-from .util import load_external_labels, number_of_people
