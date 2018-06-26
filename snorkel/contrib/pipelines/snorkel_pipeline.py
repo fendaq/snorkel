@@ -255,6 +255,10 @@ class SnorkelPipeline(object):
                 tp, fp, tn, fn = gen_model.error_analysis(
                     self.session, L_dev, L_gold_dev, display=True)
 
+                precision = float(len(tp))/float(len(tp) + len(fp)) if len(tp) + len(fp) else 0
+                recall = float(len(tp))/float(len(tp) + len(fn)) if len(tn) + len(fn) else 0
+                f1 = float(2 * precision * recall)/(precision + recall) if (precision or recall) else 0
+
         elif self.config['supervision'] == 'dp':
             from snorkel.contrib.pipelines.metal import ClassHierarchy
 
@@ -289,21 +293,22 @@ class SnorkelPipeline(object):
 
             train_marginals = ch.conditional_probs(ch._parse_L(L_train), 0)[2]
 
-            prec, rec, f1 = ch.f1_score(L_dev, L_gold_dev)
-            print('DP on dev set: P={:.3f} | R={:.3f} | F1={:.3f}'.format(
-                prec, rec, f1))
+            if self.config['verbose']:
+                prec, rec, f1 = ch.f1_score(L_dev, L_gold_dev)
+                print('DP on dev set: P={:.3f} | R={:.3f} | F1={:.3f}'.format(
+                    prec, rec, f1))
 
             if TEST in self.config['splits']:
                 L_test = convert_to_categorical(L_test)
                 L_gold_test = convert_to_categorical(L_gold_test)
                 L_gold_test = np.array(L_gold_test.todense().T)[0]
-                prec, rec, f1 = ch.f1_score(L_test, L_gold_test)
-                print('DP on test set: P={:.3f} | R={:.3f} | F1={:.3f}'.format(
-                    prec, rec, f1))
+                precision, recall, f1 = ch.f1_score(L_test, L_gold_test)
+                if self.config['verbose']:
+                    print('DP on test set: P={:.3f} | R={:.3f} | F1={:.3f}'.format(
+                        precision, recall, f1))
 
             # Store TEST if applicable, otherwise store DEV scores
-            gen_model = ch
-            self.scores['Gen'] = [prec, rec, f1]
+            gen_model = ch        
 
         elif self.config['supervision'] == 'generative':
 
@@ -345,14 +350,14 @@ class SnorkelPipeline(object):
             )
             train_marginals = gen_model.marginals(L_train)
 
-            print("\nGen. model (DP) score on dev set:")
-            tp, fp, tn, fn = gen_model.error_analysis(self.session, L_dev, L_gold_dev, b=opt_b, display=True)
+            if self.config['verbose']:
+                print("\nGen. model (DP) score on dev set:")
+                tp, fp, tn, fn = gen_model.error_analysis(self.session, L_dev, L_gold_dev, b=opt_b, display=True)
             
             # Record generative model performance
             precision = float(len(tp))/float(len(tp) + len(fp)) if len(tp) + len(fp) else 0
             recall = float(len(tp))/float(len(tp) + len(fn)) if len(tn) + len(fn) else 0
             f1 = float(2 * precision * recall)/(precision + recall) if (precision or recall) else 0
-            self.scores['Gen'] = [precision, recall, f1]
 
         else:
             raise Exception("Invalid value for 'supervision': {}".format(self.config['supervision']))
@@ -370,6 +375,7 @@ class SnorkelPipeline(object):
 
         if (self.config['supervision'] in ['generative', 'dp'] and 
             self.config['end_at'] == STAGES.CLASSIFY):
+            self.scores['Gen'] = [precision, recall, f1]
             final_report(
                 self.config, 
                 self.scores, 
@@ -461,9 +467,10 @@ class SnorkelPipeline(object):
                 X_dev   = candidates_to_features(dev, Ls)
                 X_test  = candidates_to_features(test, Ls)
 
-                print("JT X_train shape: {}".format(X_train.shape))
-                print("JT X_dev shape: {}".format(X_dev.shape))
-                print("JT X_test shape: {}".format(X_test.shape))
+                if self.config['verbose']:
+                    print("JT X_train shape: {}".format(X_train.shape))
+                    print("JT X_dev shape: {}".format(X_dev.shape))
+                    print("JT X_test shape: {}".format(X_test.shape))
 
                 L_golds = []
                 L_golds.append(load_gold_labels(self.session, annotator_name='gold', split=TRAIN))

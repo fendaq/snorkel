@@ -399,12 +399,9 @@ class ClassHierarchy(object):
             else:
                 score = self.accuracy(L_dev, Y_dev)
             if score > score_opt:
-                print('Saving model @ score = {}.'.format(score))
                 score_opt = score
                 w_opt = self.w
                 hp_kwargs_opt = hp_kwargs
-            else:
-                print('Dropping model @ score = {}.'.format(score))
 
         print('Restoring model for {}.'.format(hp_kwargs_opt))
         self.w = w_opt

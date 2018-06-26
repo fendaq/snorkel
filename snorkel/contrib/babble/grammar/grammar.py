@@ -23,7 +23,7 @@ class GrammarMixin(object):
 
 class Grammar(object):
     def __init__(self, bases, candidate_class=None, user_lists={}, 
-        beam_width=10, top_k=-1, start_symbol='$ROOT'):
+        beam_width=10, top_k=-1, start_symbol='$ROOT', verbose=False):
        
         # Extract from bases
         bases = bases if isinstance(bases, list) else [bases]
@@ -59,8 +59,9 @@ class Grammar(object):
         self.parser = Spacy()
         for rule in rules:
             self.add_rule(rule)
-        print('Created grammar with %d rules' % \
-            (len(self.lexical_rules) + len(self.unary_rules) + len(self.binary_rules)))
+        if verbose:
+            print('Created grammar with %d rules' % \
+                (len(self.lexical_rules) + len(self.unary_rules) + len(self.binary_rules)))
 
     def parse_string(self, string):
         """

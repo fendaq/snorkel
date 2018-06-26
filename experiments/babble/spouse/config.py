@@ -29,7 +29,7 @@ config = {
         'dropout':    0.5,
         'dim':        50,
         'n_epochs':   20,
-        'print_freq': 5,
+        'print_freq': 20,
     },    
     'disc_eval_batch_size': None,
 }

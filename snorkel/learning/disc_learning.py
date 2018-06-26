@@ -235,7 +235,7 @@ class TFNoiseAwareModel(Classifier):
             Y_train = Y_train[train_idxs]
             
             # Print training stats and optionally checkpoint model
-            if verbose and (t % print_freq == 0 or t in [0, (n_epochs-1)]):
+            if verbose and (t % print_freq == 0 or t == 0):
                 msg = ("[{0}...] Epoch {1} ({2:.2f}s) "
                        "\tTrain Loss={3:.3f}").format(
                         self.name[:10], t, time() - st, epoch_loss)

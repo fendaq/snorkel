@@ -97,8 +97,8 @@ def sparse_to_labelmatrix(sparse_matrix, candidate_map, lf_names, split, replace
 
 ### MODEL TRAINING ROUTINES
 def train_model(model_class, X_train, Y_train=None, X_dev=None, Y_dev=None, 
-    search_size=1, search_params={}, rand_seed=123, n_threads=1, verbose=False,
-    cardinality=None, params_default={}, model_init_params={}, model_name=None,
+    search_size=1, search_params={}, rand_seed=123, n_threads=1, verbose=False, 
+    cardinality=None, params_default={}, model_init_params={}, model_name=None, 
     save_dir='checkpoints', beta=1.0, eval_batch_size=None, tune_b=False):
         # Add to model init params
         model_init_params['seed'] = rand_seed
