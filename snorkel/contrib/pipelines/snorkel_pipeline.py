@@ -294,9 +294,9 @@ class SnorkelPipeline(object):
             train_marginals = ch.conditional_probs(ch._parse_L(L_train), 0)[2]
 
             if self.config['verbose']:
-                prec, rec, f1 = ch.f1_score(L_dev, L_gold_dev)
+                precision, recall, f1 = ch.f1_score(L_dev, L_gold_dev)
                 print('DP on dev set: P={:.3f} | R={:.3f} | F1={:.3f}'.format(
-                    prec, rec, f1))
+                    precision, recall, f1))
 
             if TEST in self.config['splits']:
                 L_test = convert_to_categorical(L_test)
@@ -352,7 +352,8 @@ class SnorkelPipeline(object):
 
             if self.config['verbose']:
                 print("\nGen. model (DP) score on dev set:")
-                tp, fp, tn, fn = gen_model.error_analysis(self.session, L_dev, L_gold_dev, b=opt_b, display=True)
+            tp, fp, tn, fn = gen_model.error_analysis(self.session, L_dev, 
+                L_gold_dev, b=opt_b, display=self.config['verbose'])
             
             # Record generative model performance
             precision = float(len(tp))/float(len(tp) + len(fp)) if len(tp) + len(fp) else 0

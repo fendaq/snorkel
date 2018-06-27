@@ -45,16 +45,17 @@ def get_local_pipeline(domain, project='babble'):
     return pipeline
 
 
-def recursive_merge_dicts(x, y):
+def recursive_merge_dicts(x, y, verbose=False):
     """
     Merge dictionary y into x, overwriting elements of x when there is a
     conflict, except if the element is a dictionary, in which case recurse.
     """
     for k, v in y.iteritems():
         if k in x and isinstance(x[k], dict):
-            x[k] = recursive_merge_dicts(x[k], v)
+            x[k] = recursive_merge_dicts(x[k], v, verbose=verbose)
         elif v is not None:
             if k in x and x[k] != v:
-                print("Overwriting {}={} to {}={}".format(k, x[k], k, v))
+                if verbose:
+                    print("Overwriting {}={} to {}={}".format(k, x[k], k, v))
             x[k] = v
     return x

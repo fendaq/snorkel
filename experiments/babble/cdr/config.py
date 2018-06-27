@@ -7,6 +7,7 @@ config = {
     'babbler_candidate_split': [0,1,2],
 
     # supervise
+    'supervision': 'generative',
     'gen_init_params': {
         'lf_propensity'         : True,
         'lf_prior'              : False, 
@@ -16,8 +17,7 @@ config = {
     },
     'gen_params_default': {
         'step_size' : 0.01,
-        'reg_param' : 0.5,
-        # 'epochs': 0,
+        'reg_param' : 5,
     },
     'tune_b': False,
 
