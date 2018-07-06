@@ -4,9 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import *
 
-import sys, os
-sys.path.append(os.environ['SNORKELHOME'] + '/treedlib/treedlib')
-from templates import *
+import treedlib.templates as tpl
 
 def compile_entity_feature_generator():
   """
@@ -16,22 +14,22 @@ def compile_entity_feature_generator():
   
   BASIC_ATTRIBS_REL = ['lemma', 'dep_label']
 
-  m = Mention(0)
+  m = tpl.Mention(0)
 
   # Basic relation feature templates
   temps = [
-    [Indicator(m, a) for a in BASIC_ATTRIBS_REL],
-    Indicator(m, 'dep_label,lemma'),
+    [tpl.Indicator(m, a) for a in BASIC_ATTRIBS_REL],
+    tpl.Indicator(m, 'dep_label,lemma'),
     # The *first element on the* path to the root: ngram lemmas along it
-    Ngrams(Parents(m, 3), 'lemma', (1,3)),
-    Ngrams(Children(m), 'lemma', (1,3)),
+    tpl.Ngrams(tpl.Parents(m, 3), 'lemma', (1,3)),
+    tpl.Ngrams(tpl.Children(m), 'lemma', (1,3)),
     # The siblings of the mention
-    [LeftNgrams(LeftSiblings(m), a) for a in BASIC_ATTRIBS_REL],
-    [RightNgrams(RightSiblings(m), a) for a in BASIC_ATTRIBS_REL]
+    [tpl.LeftNgrams(tpl.LeftSiblings(m), a) for a in BASIC_ATTRIBS_REL],
+    [tpl.RightNgrams(tpl.RightSiblings(m), a) for a in BASIC_ATTRIBS_REL]
   ]
 
   # return generator function
-  return Compile(temps).apply_mention
+  return tpl.Compile(temps).apply_mention
 
 def get_ddlib_feats(context, idxs):
   """
