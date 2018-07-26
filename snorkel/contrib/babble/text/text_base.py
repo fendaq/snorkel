@@ -20,7 +20,7 @@ lexical_rules = (
     [Rule('$Between', w, '.between') for w in ['between', 'inbetween', 'sandwiched', 'enclosed']] +
     # TODO: Add more POS options
     [Rule('$NounPOS', w, ('NN')) for w in ['noun', 'nouns']] +
-    # TODO: Add other Spacy NER options
+    # TODO: Add other NER options
     [Rule('$PersonNER', w, ('PERSON')) for w in ['person', 'people']] +
     [Rule('$LocationNER', w, ('LOC')) for w in ['location', 'locations', 'place', 'places']] +
     [Rule('$DateNER', w, ('DATE')) for w in ['date', 'dates']] +
@@ -31,7 +31,7 @@ lexical_rules = (
     [Rule('$X', w, ('.int', 2)) for w in ['y', 'Y', '2']] +
     [Rule('$ArgX', '?$PersonNER $X', lambda (person_, idx_): ('.arg', idx_))] +
 
-    # FIXME: Temporary hardcode for convenience; 
+    # Temporary hardcode for convenience; 
     # Instead, pass these domain-specific helpers if the user is allowed to
     # refer to entities as something other than "arg x" or "arg y"
     [Rule('$ArgX', w, ('.arg', ('.int', 1))) for w in ['personx', 'person1', 'arg1']] +

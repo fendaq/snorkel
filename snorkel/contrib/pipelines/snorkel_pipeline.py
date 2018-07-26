@@ -84,9 +84,6 @@ class SnorkelPipeline(object):
                 self.candidate_class.split == split).count()
         print("Candidates: {}".format(num_candidates))
 
-        # TODO:
-        # How to probe the number of features and gold labels without loading?
-
 
     def parse(self, doc_preprocessor, parser=Spacy(), fn=None, clear=True):
         corpus_parser = CorpusParser(parser=parser, fn=fn)
