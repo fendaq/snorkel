@@ -30,10 +30,6 @@ def get_local_pipeline(domain, project='babble'):
         pipeline_path = os.path.join(os.environ['SNORKELHOME'],
             'experiments', project, domain, '{}_pipeline.py'.format(domain))
         pipeline_name = '{}Pipeline'.format(domain.capitalize())
-    elif project == 'qalf':
-        pipeline_path = os.path.join(os.environ['SNORKELHOME'],
-            'experiments', project, domain, '{}_qalf_pipeline.py'.format(domain))
-        pipeline_name = '{}QalfPipeline'.format(domain.capitalize())
     else:
         raise ValueError
     if not os.path.exists(pipeline_path):

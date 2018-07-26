@@ -40,29 +40,26 @@ if __name__ == '__main__':
     # Parse command-line args
     argparser = argparse.ArgumentParser(description="Run SnorkelPipeline object.")
     
-    PROJECTS = ['babble', 'qalf']
-    DOMAINS = ['spouse', 'cdr', 'stub']
-    RELATIONS = ['per_title', 'org_top_members_employees', 'org_alternate_names']
+    PROJECTS = ['babble']
+    DOMAINS = ['spouse', 'cdr']
+    SUPERVISION = ['traditional', 'majority', 'soft_majority', 'generative', 'dp', 'jt']
 
     argparser.add_argument('--project', type=str, default='babble', choices=PROJECTS)
     argparser.add_argument('--domain', type=str, default='stub', choices=DOMAINS)
-    argparser.add_argument('--relation', type=str, default='per_title', choices=RELATIONS)
-
-    # Control flow args
-    argparser.add_argument('--start_at', type=int)
-    argparser.add_argument('--end_at', type=int)
 
     # Scaling args
     argparser.add_argument('--max_docs', type=int,
         help="""[Deprecated] Maximum documents to parse;
         NOTE: This will also filter dev and test docs. 
         See --training_docs to limit just training docs.""")
-    argparser.add_argument('--max_extra_docs', type=int)
     argparser.add_argument('--debug', action='store_true',
         help="""Reduces max_docs, grid search sizes, and num_epochs""")        
     argparser.add_argument('--codalab', action='store_true',
         help="""Turns off some features incompatible with codalab""")        
 
+    # Control flow args
+    argparser.add_argument('--start_at', type=int)
+    argparser.add_argument('--end_at', type=int)
 
     # Babble args
     argparser.add_argument('--lf_source', type=str)
@@ -71,43 +68,15 @@ if __name__ == '__main__':
     argparser.add_argument('--apply_filters', type=str2bool)
 
     # Supervision args
-    SUPERVISION = ['traditional', 'majority', 'soft_majority', 'generative', 'dp', 'jt']
     argparser.add_argument('--supervision', type=str, choices=SUPERVISION)
     argparser.add_argument('--max_train', type=int)
     argparser.add_argument('--train_fraction', type=float)
     argparser.add_argument('--learn_deps', type=str2bool)
     argparser.add_argument('--deps_thresh', type=float)
     argparser.add_argument('--gen_f_beta', type=float)
-    ## model args
-    argparser.add_argument('--gen_init_params:class_prior', type=str2bool)
-    argparser.add_argument('--gen_init_params:lf_prior', type=str2bool)
-    argparser.add_argument('--gen_init_params:lf_propensity', type=str2bool)
-    argparser.add_argument('--gen_init_params:lf_class_propensity', type=str2bool)
-
-    argparser.add_argument('--gen_params_default:step_size', type=float)
-    argparser.add_argument('--gen_params_default:reg_param', type=float)
-    argparser.add_argument('--gen_params_default:epochs', type=int)
-    ## hyperparameters
-
-    # Classify args
-    argparser.add_argument('--disc_model_class', type=str)
-
-    argparser.add_argument('--disc_params_default:batch_size', type=int)
-    argparser.add_argument('--disc_params_default:n_epochs', type=int)
-    argparser.add_argument('--disc_params_default:lr', type=float)
-    argparser.add_argument('--disc_params_default:rebalance', type=float)
-    argparser.add_argument('--disc_params_default:dropout', type=float)
-    argparser.add_argument('--disc_params_default:l2_penalty', type=float)
-    
-    argparser.add_argument('--disc_params_range:batch_size', type=int, action='append')
-    argparser.add_argument('--disc_params_range:n_epochs', type=int, action='append')
-    argparser.add_argument('--disc_params_range:lr', type=float, action='append')
-    argparser.add_argument('--disc_params_range:rebalance', type=float, action='append')
 
     # Search
     argparser.add_argument('--seed', type=int)
-    argparser.add_argument('--gen_model_search_space', type=int)
-    argparser.add_argument('--disc_model_search_space', type=int)
 
     # Logging
     argparser.add_argument('--reports_dir', type=str)
@@ -146,10 +115,15 @@ if __name__ == '__main__':
     from snorkel import SnorkelSession
     from snorkel.models import candidate_subclass
     from snorkel.contrib.pipelines.config import global_config
-    from snorkel.contrib.pipelines.config_utils import get_local_pipeline, merge_configs
+    from snorkel.contrib.pipelines.config_utils import (
+        get_local_pipeline, merge_configs, recursive_merge_dicts
+    )
+    from experiments.babble.exp_config import get_exp_config
 
-    # Resolve config conflicts (args > local config > global config)
-    config = merge_configs(args)
+    # Resolve config conflicts (args > exp config > local config > global config)
+    config = get_exp_config(args)
+    config = recursive_merge_dicts(config, args)
+    config = merge_configs(config)
     if not config['seed']:
         seed = random.randint(0,1e6)
         config['seed'] = seed
