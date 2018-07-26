@@ -380,7 +380,6 @@ class SnorkelPipeline(object):
             final_report(
                 self.config, 
                 self.scores, 
-                print_only=self.config['codalab'],
             )
 
 
@@ -554,7 +553,6 @@ class SnorkelPipeline(object):
         final_report(
             self.config, 
             self.scores, 
-            print_only=self.config['codalab'],
         )
 
 

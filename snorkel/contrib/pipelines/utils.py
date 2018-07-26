@@ -54,14 +54,14 @@ def final_report(config, scores, print_only=False):
         # Assemble the report, to be saved as a json file
         df_scores = df.to_dict()
         report = {
-            'snorkel-commit': git_commit_hash(path=os.environ['SNORKELHOME']),
-            'scores': df_scores,
-            'config': config,
+            'Precision': scores.values()[0][0],
+            'Recall': scores.values()[0][1],
+            'F1 Score': scores.values()[0][2],
         }
 
         # Save to file
-        report_dir = os.path.join(os.environ['SNORKELHOME'], config['reports_dir'], strftime("%Y_%m_%d"))
-        report_name = '{0}_{1}.json'.format(config['domain'], strftime("%H_%M_%S"))
+        report_dir = config['reports_dir']
+        report_name = 'scores.json'
         if not os.path.exists(report_dir):
             os.makedirs(report_dir)
         with open(os.path.join(report_dir, report_name), 'wb') as f:
